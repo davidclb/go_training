@@ -18,7 +18,7 @@ func TestCountImageWordinHTML(t *testing.T) {
   </body>
 </html>`
 
-	want := [2]int{14, 2}
+	want := [2]int{14, 1}
 	wdcount, imgcount := CountImageWordinHTML(strings.NewReader(raw))
 
 	if want[0] != wdcount || want[1] != imgcount {

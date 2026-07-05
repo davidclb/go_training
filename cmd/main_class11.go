@@ -1,13 +1,13 @@
 package main
 
 import (
-	"bufio"
-	"io"
-	"regexp"
+	"bytes"
+	"fmt"
+	"os"
 	"strings"
-)
 
-//Count words and images in a HTML file
+	"golang.org/x/net/html"
+)
 
 var raw = `
 <!DOCTYPE html>
@@ -17,39 +17,41 @@ var raw = `
       <p>My first paragraph.</p>
       <p>HTML <a href="https://www.w3schools.com/html/html_images.asp">images</a> are defined with the img tag:</p>
       <img src="xxx.jpg" width="104" height="142">
+            <img src="xxx.jpg" width="104" height="142">
+
+                  <img src="xxx.jpg" width="104" height="142">
+
+                        <img src="xxx.jpg" width="104" height="142">
+
   </body>
 </html>`
 
-//Brouillon conception
-//scan html ligne par ligne , quand la premiere pos = <h +nombre > or <p> recuperer la ligne dans un slice , faire len(slice) a la fin
-//Pour les images <img et j'augmente le compteur
+func visit(n *html.Node, words, pics *int) {
 
-func countImageWordinHTML(r io.Reader) (int, int) {
+	if n.Type == html.TextNode {
 
-	scan := bufio.NewScanner(r)
-
-	var wdcount, imgcount int
-
-	for scan.Scan() {
-
-		s := scan.Text()
-		regwd := regexp.MustCompile(`<h[1-6]>`)
-		regimg := regexp.MustCompile(`<img`)
-
-		if regwd.MatchString(strings.Fields(s)[0]) || strings.Fields(s)[0] == "<p>" {
-			wdcount += len(strings.Fields(s))
-		}
-
-		if regimg.MatchString(strings.Fields(s)[0]) {
-			imgcount += len(strings.Fields(s))
-		}
-
+		*words += len(strings.Fields(n.Data))
+	} else if n.Type == html.ElementNode && n.Data == "img" {
+		*pics++
 	}
-
-	return wdcount, imgcount
-
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		visit(c, words, pics)
+	}
+}
+func countImageWord_Matt(doc *html.Node) (int, int) {
+	var words, pics int
+	visit(doc, &words, &pics)
+	return words, pics
 }
 
-func main_class11() {
+func main() {
+
+	doc, err := html.Parse(bytes.NewReader([]byte(raw)))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "parse failed: %s\n", err)
+		os.Exit(-1)
+	}
+	words, pics := countImageWord_Matt(doc)
+	fmt.Printf("%d words and %d images \n", words, pics)
 
 }

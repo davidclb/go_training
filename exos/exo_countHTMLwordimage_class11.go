@@ -2,6 +2,7 @@ package exos
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"regexp"
 	"strings"
@@ -13,28 +14,29 @@ import (
 //scan html ligne par ligne , quand la premiere pos = <h +nombre > or <p> recuperer la ligne dans un slice , faire len(slice) a la fin
 //Pour les images <img et j'augmente le compteur
 
+//finalement supprime toutes balises puis je compte les mots
+//je compte toute les occurences de <img >
+
 func CountImageWordinHTML(r io.Reader) (int, int) {
 
 	scan := bufio.NewScanner(r)
 
 	var wdcount, imgcount int
 
+	tagRe := regexp.MustCompile(`<[^>]*>`)
+	tagImg := regexp.MustCompile(`<img[^>]*>`)
 	for scan.Scan() {
 
 		s := scan.Text()
-		regwd := regexp.MustCompile(`<h[1-6]>`)
-		regimg := regexp.MustCompile(`<img`)
 
-		if regwd.MatchString(strings.Fields(s)[0]) || strings.Fields(s)[0] == "<p>" {
-			wdcount += len(strings.Fields(s))
+		v := tagRe.ReplaceAllString(s, "")
+		for _, wd := range strings.Fields(v) {
+			fmt.Println(wd)
+			wdcount++
 		}
-
-		if regimg.MatchString(strings.Fields(s)[0]) {
-			imgcount += len(strings.Fields(s))
-		}
+		imgcount += len(tagImg.FindAllString(s, -1))
 
 	}
-
 	return wdcount, imgcount
 
 }
